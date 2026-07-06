@@ -1,0 +1,4 @@
+---
+- name: Include Infra Task
+  ansible.builtin.include_tasks: create_infra.yml
+

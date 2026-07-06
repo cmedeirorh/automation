@@ -1,0 +1,104 @@
+---
+- name: 1. Create VPCs in defined regions
+  amazon.aws.ec2_vpc_net:
+    name: "{{ vpc_name }}"
+    cidr_block: "{{ vpc_cidr }}"
+    region: "{{ item }}"
+    state: present
+    tags:
+      Name: "{{ vpc_name }}"
+      Environment: "{{ env_tag }}"
+      Purpose: "{{ purpose_tag }}"
+      Owner: "{{ owner_tag }}"
+  loop: "{{ aws_regions }}"
+  register: created_vpcs
+
+- name: 2. Create Subnets using the dynamically created VPC IDs
+  amazon.aws.ec2_vpc_subnet:
+    vpc_id: "{{ item.vpc.id }}"
+    cidr: "{{ subnet_cidr }}"
+    region: "{{ item.item }}"
+    state: present
+    map_public_ip_on_launch: true 
+    tags:
+      Name: "{{ subnet_name }}"
+      Environment: "{{ env_tag }}"
+      Purpose: "{{ purpose_tag }}"
+      Owner: "{{ owner_tag }}"
+  loop: "{{ created_vpcs.results }}"
+  register: created_subnets
+
+- name: 3. Create Internet Gateways for the VPCs
+  amazon.aws.ec2_vpc_igw:
+    vpc_id: "{{ item.vpc.id }}"
+    region: "{{ item.item }}"
+    state: present
+    tags:
+      Name: "{{ vpc_name }}-igw"
+      Environment: "{{ env_tag }}"
+      Purpose: "{{ purpose_tag }}"
+      Owner: "{{ owner_tag }}"
+  loop: "{{ created_vpcs.results }}"
+  register: created_igws
+
+- name: 4. Create Route Tables and associate with Subnets
+  amazon.aws.ec2_vpc_route_table:
+    vpc_id: "{{ item.item.vpc.id }}" 
+    region: "{{ item.item.item }}"
+    state: present
+    tags:
+      Name: "{{ rt_name }}"
+      Environment: "{{ env_tag }}"
+      Purpose: "{{ purpose_tag }}"
+      Owner: "{{ owner_tag }}"
+    subnets:
+      - "{{ item.subnet.id }}"
+    routes:
+      - dest: 0.0.0.0/0
+        gateway_id: "{{ created_igws.results[idx].gateway_id }}" 
+  loop: "{{ created_subnets.results }}"
+  loop_control:
+    index_var: idx
+
+- name: 5. Create Security Groups for SSH and outbound internet
+  amazon.aws.ec2_security_group:
+    name: "{{ sg_name }}"
+    description: "Allow inbound SSH and outbound internet traffic"
+    vpc_id: "{{ item.vpc.id }}"
+    region: "{{ item.item }}"
+    state: present
+    rules:
+      - proto: tcp
+        ports:
+          - 22
+        cidr_ip: 0.0.0.0/0
+        rule_desc: "Allow SSH from anywhere"
+    rules_egress:
+      - proto: all
+        ports: all
+        cidr_ip: 0.0.0.0/0
+        rule_desc: "Allow all outbound internet traffic"
+    tags:
+      Name: "{{ sg_name }}"
+      Environment: "{{ env_tag }}"
+      Purpose: "{{ purpose_tag }}"
+      Owner: "{{ owner_tag }}"
+  loop: "{{ created_vpcs.results }}"
+
+- name: 6. Fetch SSH public key from GitHub
+  ansible.builtin.uri:
+    url: "{{ key_url }}"
+    return_content: yes
+  register: fetched_pub_key
+
+- name: 7. Import SSH Key Pair to all regions
+  amazon.aws.ec2_key:
+    name: "{{ key_name }}"
+    key_material: "{{ fetched_pub_key.content }}" 
+    region: "{{ item }}"
+    state: present
+    tags:
+      Environment: "{{ env_tag }}"
+      Purpose: "{{ purpose_tag }}"
+      Owner: "{{ owner_tag }}"
+  loop: "{{ aws_regions }}"

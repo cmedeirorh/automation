@@ -1,0 +1,11 @@
+---
+- name: Deploy Required Infra on AWS
+  hosts: localhost 
+  connection: local
+  gather_facts: no
+
+  tasks:
+    - name: Create Infra
+      import_role:
+        name: aws_resources
+        tasks_from: create_infra.yml

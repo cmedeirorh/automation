@@ -1,0 +1,21 @@
+---
+aws_regions:
+  - us-east-1
+  - us-west-2
+
+vpc_cidr: "10.0.0.0/16"
+vpc_name: "aws-test-vpc"
+
+subnet_cidr: "10.0.1.0/24"
+subnet_name: "aws-test-subnet"
+
+key_name: "aws-test-key"
+key_url: "https://github.com/cmedeirorh.keys"
+
+sg_name: "aws-test-sg"
+rt_name: "aws-test-rt"
+
+# Standardized Tags
+purpose_tag: "demo"
+owner_tag: "default"
+env_tag: "demo"
