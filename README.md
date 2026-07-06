@@ -1,4 +1,4 @@
-readme_content = """# AWS Multi-Region Infrastructure Provisioning
+# Cloud Multi-Region Infrastructure Provisioning
 
 This Ansible project provisions a foundational AWS network and security infrastructure across multiple regions simultaneously. It is designed as a reusable Ansible role that ensures consistent networking, access, and tagging standards.
 
