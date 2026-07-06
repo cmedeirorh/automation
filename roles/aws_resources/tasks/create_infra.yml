@@ -75,7 +75,6 @@
         rule_desc: "Allow SSH from anywhere"
     rules_egress:
       - proto: all
-        ports: all
         cidr_ip: 0.0.0.0/0
         rule_desc: "Allow all outbound internet traffic"
     tags:
