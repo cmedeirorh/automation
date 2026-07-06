@@ -1,2 +1,3 @@
 collections:
   - community.digitalocean
+  - amazon.aws
