@@ -17,6 +17,9 @@
       community.digitalocean.digital_ocean_droplet:
         id: "{{ item.id }}"
         name: "{{ item.name }}"
+        size: "{{ item.size_slug }}"
+        region: "{{ item.region.slug }}"
+        image: "{{ item.image.slug | default(item.image.id) }}"
         state: inactive
         oauth_token: "{{ do_api_token }}"
       loop: "{{ do_droplets.data | default([]) }}"
