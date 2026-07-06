@@ -93,7 +93,7 @@
 - name: 7. Import SSH Key Pair to all regions
   amazon.aws.ec2_key:
     name: "{{ key_name }}"
-    key_material: "{{ fetched_pub_key.content }}" 
+    key_material: "{{ fetched_pub_key.content.splitlines()[0] }}" 
     region: "{{ item }}"
     state: present
     tags:
