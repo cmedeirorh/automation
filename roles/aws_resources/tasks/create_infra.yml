@@ -19,7 +19,7 @@
     cidr: "{{ subnet_cidr }}"
     region: "{{ item.item }}"
     state: present
-    map_public_ip_on_launch: true 
+    map_public: true 
     tags:
       Name: "{{ subnet_name }}"
       Environment: "{{ env_tag }}"
