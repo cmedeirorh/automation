@@ -1,0 +1,23 @@
+---
+- name: shutdown all digitalocean droplets
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  
+  vars:
+    do_api_token: ''
+
+  tasks:
+    - name: gather information on all digitalocean droplets
+      community.digitalocean.digital_ocean_droplet_info:
+        oauth_token: "{{ do_api_token }}"
+      register: do_droplets
+
+    - name: gracefully power off active droplets
+      community.digitalocean.digital_ocean_droplet:
+        id: "{{ item.id }}"
+        name: "{{ item.name }}"
+        state: inactive
+        oauth_token: "{{ do_api_token }}"
+      loop: "{{ do_droplets.data | default([]) }}"
+      when: item.status == 'active'
